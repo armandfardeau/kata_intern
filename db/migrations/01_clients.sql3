@@ -1,0 +1,4 @@
+create table clients (
+    id integer primary key,
+    name varchar(30)
+);

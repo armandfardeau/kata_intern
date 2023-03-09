@@ -2,7 +2,8 @@
 
 source "https://rubygems.org"
 
-gem "rubocop"
-gem "sqlite3"
-gem "rspec"
 gem "byebug"
+gem "rspec"
+gem "rubocop"
+gem "rubocop-rspec"
+gem "sqlite3"

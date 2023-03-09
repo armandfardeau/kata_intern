@@ -1,0 +1,8 @@
+create table invoices (
+    id integer primary key,
+    client_id integer not null,
+    amount integer not null,
+    title varchar(30) not null,
+    description varchar(100),
+    foreign key (client_id) references clients(id)
+);

@@ -11,10 +11,10 @@ class Database
 
   def self.execute(query, values = nil)
     if values
-      puts "Executing query: #{query} with values: #{values}"
+      puts "Executing query: #{query} with values: #{values}" if ENV["DEBUG"]
       db.execute(query, values)
     else
-      puts "Executing query: #{query}"
+      puts "Executing query: #{query}" if ENV["DEBUG"]
       db.execute(query)
     end
   end

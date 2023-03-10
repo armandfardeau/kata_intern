@@ -8,9 +8,9 @@ describe Invoice do
   describe ".create" do
     it "creates an invoice" do
       client = Client.create(name: "John")
-      expect(described_class.create(client: client, amount: 25, title: "Truck repair",
+      expect(described_class.create(client:, amount: 25, title: "Truck repair",
                                     description: "Repair of the truck")).to be_instance_of(described_class)
-      expect(described_class.create(client: client, amount: 25, title: "Truck repair",
+      expect(described_class.create(client:, amount: 25, title: "Truck repair",
                                     description: "Repair of the truck").amount).to eq(25)
     end
   end
@@ -28,7 +28,7 @@ describe Invoice do
   describe ".find" do
     it "returns an invoice" do
       client = Client.create(name: "John")
-      id = described_class.create(client: client, amount: 25, title: "Truck repair", description: "Repair of the truck").id
+      id = described_class.create(client:, amount: 25, title: "Truck repair", description: "Repair of the truck").id
       expect(described_class.find(id).amount).to eq(25)
     end
   end
@@ -47,7 +47,7 @@ describe Invoice do
   describe "#delete" do
     it "deletes an invoice" do
       client = Client.create(name: "John")
-      id = described_class.create(client: client, amount: 25, title: "Truck repair", description: "Repair of the truck").id
+      id = described_class.create(client:, amount: 25, title: "Truck repair", description: "Repair of the truck").id
       expect(described_class.find(id).delete).to be_nil
     end
   end

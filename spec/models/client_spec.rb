@@ -51,5 +51,13 @@ describe Client do
       expect(client1.invoices.count).to eq(2)
       expect(client2.invoices.count).to eq(1)
     end
+
+    context "when chaining scope on a relations" do
+      it "returns all expensive invoices for a client" do
+        client1 = described_class.create(name: "John")
+        Invoice.create(client_id: client1.id, amount: 1000, title: "Truck repair", description: "Repair of the truck")
+        expect(client1.invoices.expensive.count).to eq(1)
+      end
+    end
   end
 end

@@ -39,10 +39,10 @@ class Database
   def self.db
     return @db if @db
 
-    FileUtils.rm_f(DB_FILE) if File.exist?(DB_FILE)
+    FileUtils.rm_f(DB_FILE)
     db = SQLite3::Database.new(DB_FILE)
 
-    Dir["db/migrations/*.sql3"].sort.each do |file|
+    Dir["db/migrations/*.sql3"].each do |file|
       db.execute(File.read(file))
     end
 

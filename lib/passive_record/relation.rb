@@ -53,9 +53,9 @@ module PassiveRecord
       @klass.respond_to?(symbol) || super
     end
 
-    def method_missing(symbol, *args)
+    def method_missing(symbol, **args)
       if @klass.respond_to?(symbol)
-        actual = @klass.send(symbol, *args).map(&:id)
+        actual = @klass.send(symbol, **args).map(&:id)
         current = @objects.select { |object| actual.include?(object.id) }
 
         self.class.new(@klass, current)

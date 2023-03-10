@@ -51,8 +51,8 @@ module PassiveRecord
         Relation.new(self, objects)
       end
 
-      def where(**args, &block)
-        Relation.where(self, **args, &block)
+      def where(**args, &)
+        Relation.where(self, **args, &)
       end
 
       def find(id)

@@ -12,6 +12,10 @@ module PassiveRecord
         "#{name.downcase}s"
       end
 
+      def columns
+        Database.schema[table_name.to_s]
+      end
+
       def scope(name, lambda, &block)
         define_singleton_method(name) do
           if block_given?
@@ -57,16 +61,37 @@ module PassiveRecord
       end
 
       def create(**args)
+        inf = infer_relations(args)
         Database.execute(
-          "insert into #{table_name} (#{args.keys.join(', ')}) values (#{Array.new(args.values.length,
-                                                                                   '?').join(',')})", args.values
+          "insert into #{table_name} (#{inf.keys.join(', ')}) values (#{Array.new(inf.values.length,
+                                                                                  '?').join(',')})", inf.values
         )
         find(Database.last_insert_row_id)
       end
+
+      private
+
+      def infer_relations(args)
+        args.each_with_object({}) do |(key, value), hash|
+          if columns.include?("#{key}_id")
+            hash["#{key}_id".to_sym] = value.id
+          else
+            hash[key.to_sym] = value
+          end
+        end
+      end
+    end
+
+    def table_name
+      self.class.table_name
+    end
+
+    def columns
+      self.class.columns
     end
 
     define_method(:initialize) do |*args|
-      Database.schema["#{self.class.table_name}"].each_with_index do |column, index|
+      columns.each_with_index do |column, index|
         instance_variable_set("@#{column}", args[index])
         self.class.define_method(column) { instance_variable_get("@#{column}") }
         self.class.define_method("#{column}=") { |value| instance_variable_set("@#{column}", value) } unless column == "id"
@@ -74,14 +99,15 @@ module PassiveRecord
     end
 
     def update(**args)
-      Database.execute("update #{self.class.table_name} set #{args.keys.map do |k|
-        "#{k} = '#{args[k]}'"
+      inf = self.class.send(:infer_relations, args)
+      Database.execute("update #{table_name} set #{inf.keys.map do |k|
+        "#{k} = '#{inf[k]}'"
       end.join(', ')} where id = #{id}")
       self.class.find(id)
     end
 
     def delete
-      Database.execute("delete from #{self.class.table_name} where id = #{id}")
+      Database.execute("delete from #{table_name} where id = #{id}")
 
       nil
     end

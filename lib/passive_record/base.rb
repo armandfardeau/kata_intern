@@ -28,6 +28,7 @@ module PassiveRecord
           Relation.where(Object.const_get(model.capitalize[0..-2]), "#{self.class.name.downcase}_id" => id)
         end
       end
+
       # rubocop:enable Naming/PredicateName
 
       def belongs_to(model)
@@ -64,8 +65,12 @@ module PassiveRecord
       end
     end
 
-    def initialize(id)
-      @id = id
+    define_method(:initialize) do |*args|
+      Database.schema["#{self.class.table_name}"].each_with_index do |column, index|
+        instance_variable_set("@#{column}", args[index])
+        self.class.define_method(column) { instance_variable_get("@#{column}") }
+        self.class.define_method("#{column}=") { |value| instance_variable_set("@#{column}", value) } unless column == "id"
+      end
     end
 
     def update(**args)

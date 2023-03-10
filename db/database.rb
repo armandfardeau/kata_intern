@@ -19,6 +19,15 @@ class Database
     end
   end
 
+  def self.schema
+    return @schema if @schema
+
+    tables = Database.execute("select * from sqlite_master").map { |row| row[2] }
+    @schema = tables.each_with_object({}) do |table, hash|
+      hash[table] = Database.execute("pragma table_info(#{table})").map { |row| row[1] }
+    end
+  end
+
   def self.last_insert_row_id
     db.last_insert_row_id
   end

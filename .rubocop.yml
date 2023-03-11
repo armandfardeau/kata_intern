@@ -14,3 +14,9 @@ RSpec/MultipleExpectations:
 
 Layout/LineLength:
   Max: 180
+
+Metrics/AbcSize:
+  Max: 25
+
+Metrics/MethodLength:
+  Max: 11

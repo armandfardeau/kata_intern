@@ -13,35 +13,10 @@ module PassiveRecord
         @validations ||= []
       end
 
-      def errors
-        @errors ||= []
-      end
-
-      def instance_errors
-        values = errors
-        @errors = nil
-        values
-      end
-
-      def instance_valid?(args)
-        args = Struct.new(*args.keys).new(*args.values)
-        errors = validations.reject do |validation|
-          validation[:v].call(args)
-        rescue NoMethodError
-          false
+      def validates(field, *methods)
+        methods.each do |method|
+          validations << Validatable.validations_method(self, field, method)
         end
-
-        return true if errors.empty?
-
-        self.errors << errors.map do |error|
-          error[:message].call
-        end
-
-        false
-      end
-
-      def validates(field, method)
-        validations << Validatable.validations_method(self, field, method)
       end
 
       def validate(method, lambda, message = nil, &block)
@@ -49,14 +24,34 @@ module PassiveRecord
       end
     end
 
+    def valid?
+      errors = self.class.validations.reject do |validation|
+        validation[:v].call(self)
+      rescue NoMethodError
+        false
+      end
+
+      return true if errors.empty?
+
+      self.errors << errors.map do |error|
+        error[:message].call
+      end
+
+      false
+    end
+
+    def errors
+      @errors ||= []
+    end
+
     def self.validations_method(klass, field, method)
       {
         uniqueness: {
-          v: ->(args) { !args.send(field).nil? && klass.where(field.to_sym => args.send(field)).to_a.empty? },
+          v: ->(object) { !object.send(field).nil? && klass.where(field.to_sym => object.send(field)).to_a.empty? },
           message: -> { "#{field.capitalize} must be unique" }
         },
         presence: {
-          v: ->(args) { !args.send(field).nil? },
+          v: ->(object) { !object.send(field).nil? && object.send(field) != "" },
           message: -> { "#{field.capitalize} is required" }
         }
       }.fetch(method, -> { true })

@@ -24,26 +24,24 @@ module PassiveRecord
 
       def create(**args)
         inf = infer_relations(args)
-
-        raise ArgumentError, instance_errors.join(", ") unless instance_valid?(args)
-
         instance = new
+
         inf.each { |k, v| instance.send("#{k}=".to_sym, v) }
 
-        yield if block_given?
+        raise ArgumentError, instance.errors.join(", ") unless instance.valid?
 
-        instance.instance_variable_set(:@id, Database.last_insert_row_id)
+        id = yield(inf) if block_given?
+        instance.instance_variable_set(:@id, id)
         instance
       end
 
       def create!(**args)
-        inf = infer_relations(args)
-
-        create(**args) do
+        create(**args) do |inf|
           Database.execute(
             "insert into #{table_name} (#{inf.keys.join(', ')}) values (#{Array.new(inf.values.length,
                                                                                     '?').join(',')})", inf.values
           )
+          Database.last_insert_row_id
         end
       end
 
@@ -80,23 +78,16 @@ module PassiveRecord
 
     def update(**args)
       inf = self.class.send(:infer_relations, args)
+      inf.each { |k, v| send("#{k}=".to_sym, v) }
 
-      values = instance_variables.each_with_object({}) do |instance_variable, hash|
-        hash[instance_variable.to_s.sub("@", "").to_sym] = instance_variable_get(instance_variable)
-      end.merge(inf)
+      raise ArgumentError, errors.join(", ") unless valid?
 
-      raise ArgumentError, self.class.instance_errors.join(", ") unless self.class.instance_valid?(values)
-
-      yield if block_given?
-
-      values.tap { |v| v.delete(:id) }.each { |k, v| send("#{k}=".to_sym, v) }
-
+      yield(inf) if block_given?
       self
     end
 
     def update!(**args)
-      inf = self.class.send(:infer_relations, args)
-      update(**args) do
+      update(**args) do |inf|
         Database.execute("update #{table_name} set #{inf.keys.map do |k|
           "#{k} = '#{inf[k]}'"
         end.join(', ')} where id = #{id}")

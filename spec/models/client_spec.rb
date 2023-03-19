@@ -18,6 +18,12 @@ describe Client do
         expect { described_class.create!(name: "John") }.to raise_error(ArgumentError, "Name must be unique")
       end
     end
+
+    context "when creating a client with an empty name" do
+      it "raises an error" do
+        expect { described_class.create!(name: "") }.to raise_error(ArgumentError, "Name is required")
+      end
+    end
   end
 
   describe ".all" do
